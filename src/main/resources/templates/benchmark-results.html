@@ -89,7 +89,7 @@
         
         const virtualImprovement = [[${result.virtualVsTraditionalImprovement}]];
         const webfluxImprovement = [[${result.webFluxVsTraditionalImprovement}]];
-        const webfluxVsVirtual = [[${result.webFluxVsVirtualImprovement}]];
+        const webfluxVsVirtual = [[${result.virtualThreadsDuration == 0 ? 0 : ((result.webFluxDuration - result.virtualThreadsDuration) / (result.webFluxDuration)) * 100}]];
         
         // Time chart
         const timeCtx = document.getElementById('timeChart').getContext('2d');
