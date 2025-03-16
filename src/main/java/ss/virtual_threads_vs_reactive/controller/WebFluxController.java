@@ -34,107 +34,79 @@ public class WebFluxController {
 
     @GetMapping("/cpu")
     public Mono<ApiResponse> performCpuWork(
-            @RequestParam(defaultValue = "10000000") int iterations,
-            @RequestParam(defaultValue = "1") int concurrentRequests) {
-        log.info("Received WebFlux CPU work request on thread: {} with {} concurrent requests", 
-                Thread.currentThread(), concurrentRequests);
+            @RequestParam(defaultValue = "10000000") int iterations) {
+        log.info("Received WebFlux CPU work request on thread: {}", Thread.currentThread());
         
         long startTime = System.currentTimeMillis();
         
-        return Flux.range(0, concurrentRequests)
-                .flatMap(i -> Mono.fromCallable(() -> workService.performCpuIntensiveWork(iterations)))
-                .collectList()
-                .map(results -> {
+        return Mono.fromCallable(() -> workService.performCpuIntensiveWork(iterations))
+                .subscribeOn(reactiveScheduler)
+                .map(result -> {
                     long responseTime = System.currentTimeMillis() - startTime;
                     return new ApiResponse(true, 
-                            String.format("Completed %d concurrent CPU work requests with WebFlux", results.size()),
+                            "Completed CPU work request with WebFlux",
                             responseTime);
                 })
                 .onErrorResume(e -> {
                     long responseTime = System.currentTimeMillis() - startTime;
                     log.error("Error in WebFlux CPU work", e);
                     return Mono.just(new ApiResponse(false, "Error: " + e.getMessage(), responseTime));
-                }).subscribeOn(reactiveScheduler);
+                });
     }
 
     @GetMapping("/io")
     public Mono<ApiResponse> performIoWork(
-            @RequestParam(defaultValue = "1000") int delayMs,
-            @RequestParam(defaultValue = "1") int concurrentRequests) {
-        log.info("Received WebFlux I/O work request on thread: {} with {} concurrent requests", 
-                Thread.currentThread(), concurrentRequests);
+            @RequestParam(defaultValue = "1000") int delayMs) {
+        log.info("Received WebFlux I/O work request on thread: {}", Thread.currentThread());
         
         long startTime = System.currentTimeMillis();
         
-        return Flux.range(0, concurrentRequests)
-                .flatMap(i -> workService.performIoWorkReactive(delayMs))
-                .collectList()
-                .map(results -> {
+        return workService.performIoWorkReactive(delayMs)
+                .subscribeOn(reactiveScheduler)
+                .map(result -> {
                     long responseTime = System.currentTimeMillis() - startTime;
                     return new ApiResponse(true, 
-                            String.format("Completed %d concurrent I/O work requests with WebFlux", results.size()),
+                            "Completed I/O work request with WebFlux",
                             responseTime);
                 })
                 .onErrorResume(e -> {
                     long responseTime = System.currentTimeMillis() - startTime;
                     log.error("Error in WebFlux I/O work", e);
                     return Mono.just(new ApiResponse(false, "Error: " + e.getMessage(), responseTime));
-                }).subscribeOn(reactiveScheduler);
+                });
     }
 
     @GetMapping("/async")
     public Mono<ApiResponse> performAsyncWork(
-            @RequestParam(defaultValue = "1000") int delayMs,
-            @RequestParam(defaultValue = "1") int concurrentRequests) {
-        log.info("Received WebFlux async work request on thread: {} with {} concurrent requests", 
-                Thread.currentThread(), concurrentRequests);
-
-      // Create a list to hold all the futures
-      List<CompletableFuture<String>> futures = new ArrayList<>();
+            @RequestParam(defaultValue = "1000") int delayMs) {
+        log.info("Received WebFlux async work request on thread: {}", Thread.currentThread());
+        
         long startTime = System.currentTimeMillis();
-
-      var executor = Executors.newVirtualThreadPerTaskExecutor();
-
-
-      for (int i = 0; i < concurrentRequests; i++) {
-        final int taskId = i;
-        CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> {
-          try {
-            String threadInfo = Thread.currentThread().toString();
-            log.info("Task {} executing on virtual thread: {}", taskId, threadInfo);
-
-            // Simulate I/O work directly here instead of using the service
-            Thread.sleep(delayMs);
-
-            log.info("Task {} completed on virtual thread: {}", taskId, threadInfo);
-            return "Task " + taskId + " completed on " + threadInfo;
-          } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException(e);
-          }
-        }, executor);
-
-        futures.add(future);
-      }
-
-      // Convert the list of futures to a single future that completes when all complete
-      CompletableFuture<List<String>> allFutures = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
-          .thenApply(v -> futures.stream()
-              .map(CompletableFuture::join)
-              .collect(Collectors.toList()));
-
-      // Convert the combined future to a Mono
-      return Mono.fromFuture(allFutures)
-          .map(results -> {
-            long responseTime = System.currentTimeMillis() - startTime;
-            return new ApiResponse(true,
-                String.format("Completed %d concurrent async work requests with virtual threads", results.size()),
-                responseTime);
-          })
-          .onErrorResume(e -> {
-            long responseTime = System.currentTimeMillis() - startTime;
-            log.error("Error in async work", e);
-            return Mono.just(new ApiResponse(false, "Error: " + e.getMessage(), responseTime));
-          });
+        
+        // Use Mono.defer to ensure each subscription gets its own execution context
+        return Mono.defer(() -> {
+                String threadInfo = Thread.currentThread().toString();
+                log.info("Starting async work on WebFlux thread: {}", threadInfo);
+                
+                // Use delayElement which is non-blocking and truly reactive
+                return Mono.just("Task completed")
+                        .delayElement(Duration.ofMillis(delayMs))
+                        .doOnNext(result -> {
+                            String completionThread = Thread.currentThread().toString();
+                            log.info("Completed async work on WebFlux thread: {}", completionThread);
+                        });
+            })
+            .subscribeOn(reactiveScheduler)
+            .map(result -> {
+                long responseTime = System.currentTimeMillis() - startTime;
+                return new ApiResponse(true, 
+                        "Completed async work request with WebFlux",
+                        responseTime);
+            })
+            .onErrorResume(e -> {
+                long responseTime = System.currentTimeMillis() - startTime;
+                log.error("Error in WebFlux async work", e);
+                return Mono.just(new ApiResponse(false, "Error: " + e.getMessage(), responseTime));
+            });
     }
 } 

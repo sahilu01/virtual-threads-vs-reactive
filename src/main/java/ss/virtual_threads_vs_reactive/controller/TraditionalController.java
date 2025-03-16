@@ -29,110 +29,98 @@ public class TraditionalController {
 
     @GetMapping("/cpu")
     public Mono<ApiResponse> performCpuWork(
-            @RequestParam(defaultValue = "10000000") int iterations,
-            @RequestParam(defaultValue = "1") int concurrentRequests) {
-        log.info("Received CPU work request on thread: {} with {} concurrent requests", 
-                Thread.currentThread(), concurrentRequests);
+            @RequestParam(defaultValue = "10000000") int iterations) {
+        log.info("Received CPU work request on thread: {}", Thread.currentThread());
         
         long startTime = System.currentTimeMillis();
         
         // Use boundedElastic scheduler to simulate traditional thread pool behavior
-        return Flux.range(0, concurrentRequests)
-                .flatMap(i -> Mono.fromCallable(() -> workService.performCpuIntensiveWork(iterations)))
-                .collectList()
-                .map(results -> {
+        return Mono.fromCallable(() -> workService.performCpuIntensiveWork(iterations))
+                .subscribeOn(traditionalScheduler)
+                .map(result -> {
                     long responseTime = System.currentTimeMillis() - startTime;
                     return new ApiResponse(true, 
-                            String.format("Completed %d concurrent CPU work requests", results.size()),
+                            "Completed CPU work request",
                             responseTime);
                 })
                 .onErrorResume(e -> {
                     long responseTime = System.currentTimeMillis() - startTime;
                     log.error("Error in CPU work", e);
                     return Mono.just(new ApiResponse(false, "Error: " + e.getMessage(), responseTime));
-                }).subscribeOn(traditionalScheduler);
+                });
     }
 
     @GetMapping("/io")
     public Mono<ApiResponse> performIoWork(
-            @RequestParam(defaultValue = "1000") int delayMs,
-            @RequestParam(defaultValue = "1") int concurrentRequests) {
-        log.info("Received I/O work request on thread: {} with {} concurrent requests", 
-                Thread.currentThread(), concurrentRequests);
+            @RequestParam(defaultValue = "1000") int delayMs) {
+        log.info("Received I/O work request on thread: {}", Thread.currentThread());
         
         long startTime = System.currentTimeMillis();
         
         // Use boundedElastic scheduler to simulate traditional thread pool behavior
-        return Flux.range(0, concurrentRequests)
-                .flatMap(i -> Mono.fromCallable(() -> {
-                        try {
-                            return workService.performIoWork(delayMs);
-                        } catch (InterruptedException e) {
-                            Thread.currentThread().interrupt();
-                            throw new RuntimeException(e);
-                        }
-                    }))
-                .collectList()
-                .map(results -> {
-                    long responseTime = System.currentTimeMillis() - startTime;
-                    return new ApiResponse(true, 
-                            String.format("Completed %d concurrent I/O work requests", results.size()),
-                            responseTime);
-                })
-                .onErrorResume(e -> {
-                    long responseTime = System.currentTimeMillis() - startTime;
-                    log.error("Error in I/O work", e);
-                    return Mono.just(new ApiResponse(false, "Error: " + e.getMessage(), responseTime));
-                }).subscribeOn(traditionalScheduler);
+        return Mono.fromCallable(() -> {
+                try {
+                    return workService.performIoWork(delayMs);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException(e);
+                }
+            })
+            .subscribeOn(traditionalScheduler)
+            .map(result -> {
+                long responseTime = System.currentTimeMillis() - startTime;
+                return new ApiResponse(true, 
+                        "Completed I/O work request",
+                        responseTime);
+            })
+            .onErrorResume(e -> {
+                long responseTime = System.currentTimeMillis() - startTime;
+                log.error("Error in I/O work", e);
+                return Mono.just(new ApiResponse(false, "Error: " + e.getMessage(), responseTime));
+            });
     }
     
     @GetMapping("/async")
     public Mono<ApiResponse> performAsyncWork(
-            @RequestParam(defaultValue = "1000") int delayMs,
-            @RequestParam(defaultValue = "1") int concurrentRequests) {
-        log.info("Received Traditional async work request on thread: {} with {} concurrent requests", 
-                Thread.currentThread(), concurrentRequests);
+            @RequestParam(defaultValue = "1000") int delayMs) {
+        log.info("Received Traditional async work request on thread: {}", Thread.currentThread());
         
         long startTime = System.currentTimeMillis();
         
-        // Create a fixed thread pool for this batch of requests
-        var executor = Executors.newFixedThreadPool(Math.min(concurrentRequests, 10));
+        // Create a fixed thread pool for this request
+        var executor = Executors.newFixedThreadPool(1);
         
-        return Flux.range(0, concurrentRequests)
-                .flatMap(i -> {
-                    // Create a new CompletableFuture for each request using the thread pool
-                    CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> {
-                        try {
-                            String threadInfo = Thread.currentThread().toString();
-                            log.info("Executing async work on traditional thread: {}", threadInfo);
-                            return workService.performIoWork(delayMs);
-                        } catch (InterruptedException e) {
-                            Thread.currentThread().interrupt();
-                            throw new RuntimeException(e);
-                        }
-                    }, executor);
-                    
-                    return Mono.fromFuture(future)
-                        .doOnNext(result -> {
-                            String threadInfo = Thread.currentThread().toString();
-                            log.info("Completed async work on thread: {}", threadInfo);
-                        });
-                })
-                .collectList()
-                .map(results -> {
-                    long responseTime = System.currentTimeMillis() - startTime;
-                    return new ApiResponse(true, 
-                            String.format("Completed %d concurrent async work requests with traditional threads", results.size()),
-                            responseTime);
-                })
-                .onErrorResume(e -> {
-                    long responseTime = System.currentTimeMillis() - startTime;
-                    log.error("Error in async work", e);
-                    return Mono.just(new ApiResponse(false, "Error: " + e.getMessage(), responseTime));
-                })
-                .doFinally(signal -> {
-                    // Clean up the executor when done
-                    executor.shutdown();
-                });
+        // Create a new CompletableFuture using the thread pool
+        CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> {
+            try {
+                String threadInfo = Thread.currentThread().toString();
+                log.info("Executing async work on traditional thread: {}", threadInfo);
+                return workService.performIoWork(delayMs);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException(e);
+            }
+        }, executor);
+        
+        return Mono.fromFuture(future)
+            .doOnNext(result -> {
+                String threadInfo = Thread.currentThread().toString();
+                log.info("Completed async work on thread: {}", threadInfo);
+            })
+            .map(result -> {
+                long responseTime = System.currentTimeMillis() - startTime;
+                return new ApiResponse(true, 
+                        "Completed async work request with traditional threads",
+                        responseTime);
+            })
+            .onErrorResume(e -> {
+                long responseTime = System.currentTimeMillis() - startTime;
+                log.error("Error in async work", e);
+                return Mono.just(new ApiResponse(false, "Error: " + e.getMessage(), responseTime));
+            })
+            .doFinally(signal -> {
+                // Clean up the executor when done
+                executor.shutdown();
+            });
     }
 } 

@@ -2,9 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Test Result</title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
 </head>
 <body>
     <div class="container mt-5">
@@ -12,47 +10,18 @@
         
         <div class="card mb-4">
             <div class="card-header">
-                <span th:text="${strategy}">Strategy</span> - 
-                <span th:text="${workType == 'io' ? 'I/O Bound' : (workType == 'cpu' ? 'CPU Bound' : 'Async')}">Work Type</span>
+                <h2 th:text="${testType} + ' ' + ${workType} + ' Test'"></h2>
             </div>
             <div class="card-body">
-                <h5 class="card-title" th:text="${response.success ? 'Success' : 'Error'}">Status</h5>
-                <p class="card-text" th:text="${response.message}">Message</p>
-                
-                <div class="mt-3">
-                    <strong>Parameters:</strong>
-                    <ul>
-                        <li th:if="${workType != 'cpu'}">Delay: <span th:text="${delayMs}">1000</span> ms</li>
-                        <li th:if="${workType == 'cpu'}">CPU Iterations: 10,000,000</li>
-                        <li>Concurrent Requests: <span th:text="${concurrentRequests}">1</span></li>
-                    </ul>
-                </div>
-                
-                <div class="mt-3">
-                    <strong>Performance:</strong>
-                    <ul>
-                        <li>Total Response Time: <span th:text="${response.responseTimeMs}">0</span> ms</li>
-                        <li>Average Response Time per Request: <span th:text="${concurrentRequests > 0 ? response.responseTimeMs / concurrentRequests : 0}">0</span> ms</li>
-                        <li>Throughput: <span th:text="${response.responseTimeMs > 0 ? (concurrentRequests * 1000.0 / response.responseTimeMs) : 0}">0</span> requests/second</li>
-                    </ul>
-                </div>
+                <p><strong>Delay:</strong> <span th:text="${delayMs} + ' ms'"></span></p>
+                <p><strong>Success:</strong> <span th:text="${response.success}"></span></p>
+                <p><strong>Message:</strong> <span th:text="${response.message}"></span></p>
+                <p><strong>Response Time:</strong> <span th:text="${response.responseTimeMs} + ' ms'"></span></p>
             </div>
         </div>
         
-        <div class="mt-4">
-            <!-- Debug output to see what's being passed -->
-            <div class="mb-2">
-                <small class="text-muted">Debug - Strategy: <span th:text="${strategy}"></span></small>
-            </div>
-            
-            <!-- Use a more robust approach to generate the back URL -->
-            <a th:href="${
-                strategy == 'Traditional Threads' ? '/traditional' : 
-                (strategy == 'Virtual Threads' ? '/virtual' : 
-                (strategy == 'WebFlux' ? '/webflux' : '/'))
-            }" class="btn btn-secondary">Back</a>
-            <a href="/" class="btn btn-primary">Home</a>
-        </div>
+        <a th:href="'/' + ${#strings.toLowerCase(testType).replace(' ', '')}" class="btn btn-primary">Run Another Test</a>
+        <a href="/" class="btn btn-secondary">Back to Home</a>
     </div>
 </body>
 </html> 

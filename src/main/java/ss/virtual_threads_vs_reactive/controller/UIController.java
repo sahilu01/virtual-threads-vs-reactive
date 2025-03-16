@@ -73,89 +73,80 @@ public class UIController {
         return "benchmark-results";
     }
     
-    @GetMapping("/run-traditional")
-    public String runTraditional(
+    @GetMapping("/traditional/run")
+    public String runTraditionalTest(
             @RequestParam(defaultValue = "1000") int delayMs,
             @RequestParam(defaultValue = "io") String workType,
-            @RequestParam(defaultValue = "1") int concurrentRequests,
             Model model) {
-        
-        log.info("Running traditional thread test with {}ms delay, type: {}, concurrent requests: {}", 
-                delayMs, workType, concurrentRequests);
+        log.info("Running traditional test with {}ms delay, type: {}", delayMs, workType);
         
         Mono<ApiResponse> responseMono;
         if ("cpu".equals(workType)) {
-            responseMono = traditionalController.performCpuWork(10000000, concurrentRequests);
+            responseMono = traditionalController.performCpuWork(10000000);
         } else if ("async".equals(workType)) {
-            responseMono = traditionalController.performAsyncWork(delayMs, concurrentRequests);
+            responseMono = traditionalController.performAsyncWork(delayMs);
         } else {
-            responseMono = traditionalController.performIoWork(delayMs, concurrentRequests);
+            responseMono = traditionalController.performIoWork(delayMs);
         }
         
         ApiResponse response = responseMono.block();
-        model.addAttribute("response", response);
-        model.addAttribute("strategy", "Traditional Threads");
+        
+        model.addAttribute("testType", "Traditional");
         model.addAttribute("workType", workType);
         model.addAttribute("delayMs", delayMs);
-        model.addAttribute("concurrentRequests", concurrentRequests);
+        model.addAttribute("response", response);
         
         return "result";
     }
     
-    @GetMapping("/run-virtual")
-    public String runVirtual(
+    @GetMapping("/virtual/run")
+    public String runVirtualTest(
             @RequestParam(defaultValue = "1000") int delayMs,
             @RequestParam(defaultValue = "io") String workType,
-            @RequestParam(defaultValue = "1") int concurrentRequests,
             Model model) {
-        
-        log.info("Running virtual thread test with {}ms delay, type: {}, concurrent requests: {}", 
-                delayMs, workType, concurrentRequests);
+        log.info("Running virtual thread test with {}ms delay, type: {}", delayMs, workType);
         
         Mono<ApiResponse> responseMono;
         if ("cpu".equals(workType)) {
-            responseMono = virtualThreadController.performCpuWork(10000000, concurrentRequests);
+            responseMono = virtualThreadController.performCpuWork(10000000);
         } else if ("async".equals(workType)) {
-            responseMono = virtualThreadController.performAsyncWork(delayMs, concurrentRequests);
+            responseMono = virtualThreadController.performAsyncWork(delayMs);
         } else {
-            responseMono = virtualThreadController.performIoWork(delayMs, concurrentRequests);
+            responseMono = virtualThreadController.performIoWork(delayMs);
         }
         
         ApiResponse response = responseMono.block();
-        model.addAttribute("response", response);
-        model.addAttribute("strategy", "Virtual Threads");
+        
+        model.addAttribute("testType", "Virtual Thread");
         model.addAttribute("workType", workType);
         model.addAttribute("delayMs", delayMs);
-        model.addAttribute("concurrentRequests", concurrentRequests);
+        model.addAttribute("response", response);
         
         return "result";
     }
     
-    @GetMapping("/run-webflux")
-    public String runWebFlux(
+    @GetMapping("/webflux/run")
+    public String runWebFluxTest(
             @RequestParam(defaultValue = "1000") int delayMs,
             @RequestParam(defaultValue = "io") String workType,
-            @RequestParam(defaultValue = "1") int concurrentRequests,
             Model model) {
-        
-        log.info("Running WebFlux test with {}ms delay, type: {}, concurrent requests: {}", 
-                delayMs, workType, concurrentRequests);
+        log.info("Running WebFlux test with {}ms delay, type: {}", delayMs, workType);
         
         Mono<ApiResponse> responseMono;
         if ("cpu".equals(workType)) {
-            responseMono = webFluxController.performCpuWork(10000000, concurrentRequests);
+            responseMono = webFluxController.performCpuWork(10000000);
         } else if ("async".equals(workType)) {
-            responseMono = webFluxController.performAsyncWork(delayMs, concurrentRequests);
+            responseMono = webFluxController.performAsyncWork(delayMs);
         } else {
-            responseMono = webFluxController.performIoWork(delayMs, concurrentRequests);
+            responseMono = webFluxController.performIoWork(delayMs);
         }
         
         ApiResponse response = responseMono.block();
-        model.addAttribute("response", response);
-        model.addAttribute("strategy", "WebFlux");
+        
+        model.addAttribute("testType", "WebFlux");
         model.addAttribute("workType", workType);
         model.addAttribute("delayMs", delayMs);
-        model.addAttribute("concurrentRequests", concurrentRequests);
+        model.addAttribute("response", response);
         
         return "result";
     }
