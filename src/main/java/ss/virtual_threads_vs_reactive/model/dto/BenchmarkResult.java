@@ -16,11 +16,7 @@ public class BenchmarkResult {
     public double getWebFluxVsTraditionalImprovement() {
         return calculateImprovement(traditionalThreadsDuration, webFluxDuration);
     }
-    
-    public double getWebFluxVsVirtualImprovement() {
-        return calculateImprovement(webFluxDuration,virtualThreadsDuration);
-    }
-    
+
     private double calculateImprovement(long baseline, long improved) {
         if (baseline == 0) return 0;
         return ((double)(baseline - improved) / baseline) * 100;
