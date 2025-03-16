@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Benchmark Results</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">Benchmark Results</h1>
+        
+        <div class="alert alert-info">
+            <strong>Parameters:</strong> 
+            <span th:text="${params.concurrentRequests}"></span> concurrent requests, 
+            <span th:text="${params.delayMs}"></span>ms delay, 
+            work type: <span th:text="${params.workType}"></span>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>Execution Time (ms)</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="timeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>Performance Improvement (%)</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="improvementChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Detailed Results</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Thread Strategy</th>
+                            <th>Execution Time (ms)</th>
+                            <th>Relative Performance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Traditional Threads</td>
+                            <td th:text="${result.traditionalThreadsDuration}"></td>
+                            <td>Baseline</td>
+                        </tr>
+                        <tr>
+                            <td>Virtual Threads</td>
+                            <td th:text="${result.virtualThreadsDuration}"></td>
+                            <td th:text="${#numbers.formatDecimal(result.virtualVsTraditionalImprovement, 1, 2)} + '% faster than Traditional'"></td>
+                        </tr>
+                        <tr>
+                            <td>WebFlux</td>
+                            <td th:text="${result.webFluxDuration}"></td>
+                            <td th:text="${#numbers.formatDecimal(result.webFluxVsTraditionalImprovement, 1, 2)} + '% faster than Traditional'"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="mb-4">
+            <a href="/" class="btn btn-primary">Run Another Benchmark</a>
+        </div>
+    </div>
+    
+    <script th:inline="javascript">
+        // Get data from Thymeleaf
+        const traditionalTime = [[${result.traditionalThreadsDuration}]];
+        const virtualTime = [[${result.virtualThreadsDuration}]];
+        const webfluxTime = [[${result.webFluxDuration}]];
+        
+        const virtualImprovement = [[${result.virtualVsTraditionalImprovement}]];
+        const webfluxImprovement = [[${result.webFluxVsTraditionalImprovement}]];
+        const webfluxVsVirtual = [[${result.webFluxVsVirtualImprovement}]];
+        
+        // Time chart
+        const timeCtx = document.getElementById('timeChart').getContext('2d');
+        new Chart(timeCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Traditional Threads', 'Virtual Threads', 'WebFlux'],
+                datasets: [{
+                    label: 'Execution Time (ms)',
+                    data: [traditionalTime, virtualTime, webfluxTime],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.5)',
+                        'rgba(54, 162, 235, 0.5)',
+                        'rgba(75, 192, 192, 0.5)'
+                    ],
+                    borderColor: [
+                        'rgb(255, 99, 132)',
+                        'rgb(54, 162, 235)',
+                        'rgb(75, 192, 192)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        
+        // Improvement chart
+        const improvementCtx = document.getElementById('improvementChart').getContext('2d');
+        new Chart(improvementCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Virtual vs Traditional', 'WebFlux vs Traditional', 'WebFlux vs Virtual'],
+                datasets: [{
+                    label: 'Improvement (%)',
+                    data: [virtualImprovement, webfluxImprovement, webfluxVsVirtual],
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 0.5)',
+                        'rgba(75, 192, 192, 0.5)',
+                        'rgba(153, 102, 255, 0.5)'
+                    ],
+                    borderColor: [
+                        'rgb(54, 162, 235)',
+                        'rgb(75, 192, 192)',
+                        'rgb(153, 102, 255)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html> 
