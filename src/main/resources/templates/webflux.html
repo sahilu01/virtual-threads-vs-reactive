@@ -1,65 +1,47 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>WebFlux</title>
+    <title>WebFlux Demo</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
     <div class="container mt-5">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="/">Home</a></li>
-                <li class="breadcrumb-item active" aria-current="page">WebFlux</li>
-            </ol>
-        </nav>
+        <h1>WebFlux Demo</h1>
+        <p class="lead">Test the performance of reactive programming with Spring WebFlux</p>
         
-        <h1 class="mb-4">WebFlux</h1>
-        <p class="lead">
-            WebFlux is Spring's reactive programming model that uses non-blocking I/O and event-loop concurrency.
-            It's designed for high-concurrency, I/O-bound applications.
-        </p>
-        
-        <div class="card">
-            <div class="card-header bg-info text-white">
-                <h5 class="mb-0">Run WebFlux Test</h5>
+        <div class="card mb-4">
+            <div class="card-header">
+                Run Test
             </div>
             <div class="card-body">
                 <form action="/run-webflux" method="get">
                     <div class="mb-3">
-                        <label for="delayMs" class="form-label">Delay (ms)</label>
-                        <input type="number" class="form-control" id="delayMs" name="delayMs" value="1000">
-                    </div>
-                    <div class="mb-3">
                         <label for="workType" class="form-label">Work Type</label>
                         <select class="form-select" id="workType" name="workType">
-                            <option value="io" selected>I/O Bound</option>
+                            <option value="io">I/O Bound</option>
                             <option value="cpu">CPU Bound</option>
                             <option value="async">Async</option>
                         </select>
                     </div>
-                    <button type="submit" class="btn btn-info">Run Test</button>
+                    <div class="mb-3">
+                        <label for="delayMs" class="form-label">Delay (ms)</label>
+                        <input type="number" class="form-control" id="delayMs" name="delayMs" value="1000">
+                        <div class="form-text">For I/O and Async work types only</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="concurrentRequests" class="form-label">Concurrent Requests</label>
+                        <input type="number" class="form-control" id="concurrentRequests" name="concurrentRequests" value="1" min="1" max="1000">
+                        <div class="form-text">Number of concurrent requests to process</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Run Test</button>
                 </form>
             </div>
         </div>
         
         <div class="mt-4">
-            <h5>How WebFlux Works</h5>
-            <p>
-                WebFlux uses a reactive programming model based on the Reactor library. It uses a small number of 
-                event-loop threads to handle many concurrent connections. Instead of blocking threads, it uses 
-                callbacks and event handlers to process requests when data is available.
-            </p>
-            <h6>Characteristics:</h6>
-            <ul>
-                <li>Non-blocking I/O with event loops</li>
-                <li>Uses a small number of threads (typically CPU cores + 1)</li>
-                <li>Reactive programming model with Mono and Flux</li>
-                <li>Excellent for I/O-bound tasks with high concurrency</li>
-                <li>Requires a different programming model (reactive streams)</li>
-                <li>CPU-bound tasks need to be offloaded to avoid blocking event loops</li>
-            </ul>
+            <a href="/" class="btn btn-secondary">Back to Home</a>
         </div>
     </div>
 </body>

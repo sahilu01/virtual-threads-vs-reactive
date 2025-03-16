@@ -57,7 +57,7 @@ public class ThreadingConfig {
     // Create a scheduler for reactive programming
     @Bean(name = "reactiveScheduler")
     public Scheduler reactiveScheduler() {
-        return Schedulers.newParallel("reactive", 10);
+        return Schedulers.boundedElastic();
     }
     
     // Custom thread factory to name threads

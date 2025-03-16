@@ -19,7 +19,7 @@ public class WebClientConfig {
         // Use a fixed thread pool for traditional approach
         HttpClient httpClient = HttpClient.create(
                 ConnectionProvider.builder("traditional")
-                        .maxConnections(500)
+                        .maxConnections(1000)
                         .pendingAcquireTimeout(Duration.ofSeconds(60))
                         .build())
                 .runOn(LoopResources.create("traditional", 20, true));
