@@ -21,6 +21,13 @@ The application simulates different types of workloads (I/O-bound, CPU-bound, an
 - **Visual Results**: View benchmark results with interactive charts and tables.
 - **API Endpoints**: Access all functionality programmatically through REST APIs.
 - **Configurable Schedulers**: Customize scheduler properties through `application.properties`.
+  
+## Screenshots
+
+<img width="2553" alt="Screenshot 2025-03-16 at 5 07 36 PM" src="https://github.com/user-attachments/assets/5a1ab25d-7f24-449e-9766-f9b4bc935460" />
+<img width="1447" alt="Screenshot 2025-03-16 at 5 07 13 PM" src="https://github.com/user-attachments/assets/952871f8-f48d-4947-9043-7462a76c6189" />
+<img width="990" alt="Screenshot 2025-03-16 at 5 08 08 PM" src="https://github.com/user-attachments/assets/c517f84d-b3c2-456a-933c-cca52e56f30b" />
+
 
 ## Scheduler Types
 
