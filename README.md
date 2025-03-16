@@ -1,4 +1,4 @@
-# Thread Strategies Demo
+# Virtual Threads vs Reactive
 
 A comprehensive demonstration and benchmarking application for comparing different threading models and scheduler implementations in Java. This project showcases the performance characteristics of traditional platform threads, virtual threads (Project Loom), and reactive programming using Spring WebFlux.
 
@@ -52,8 +52,8 @@ The application supports benchmarking the following scheduler types:
 
 1. Clone the repository:
    ```sh
-   git clone https://github.com/yourusername/thread-strategies-demo.git
-   cd thread-strategies-demo
+   git clone https://github.com/sahilu01/virtual-threads-vs-reactive.git
+   cd virtual-threads-vs-reactive
    ```
 
 2. Build the application:
@@ -63,7 +63,7 @@ The application supports benchmarking the following scheduler types:
 
 3. Run the application:
    ```sh
-   java -jar target/thread-strategies-demo-0.0.1-SNAPSHOT.jar
+   java -jar target/virtual-threads-vs-reactive-0.0.1-SNAPSHOT.jar
    ```
 
 4. Access the application:
